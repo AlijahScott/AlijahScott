@@ -1,5 +1,4 @@
 ## Hi there 👋
-# Resume
 
 ## Contact Information
 - **Name**: Alijah Scott
