@@ -1,16 +1,22 @@
 ## Hi there 👋
+# Resume
 
-<!--
-**AlijahScott/AlijahScott** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+## Contact Information
+- **Name**: Alijah Scott
+- **Email**: scottalijah5@gmail.com
+- **Phone**: 419-989-7150
 
-Here are some ideas to get you started:
+## Summary
+I am a intern doing an 8 week intership with genius cloud solutions. 
 
-- 🔭 I’m currently working on an internship with genious cloud solutions
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Skills
+### Programming Languages
+- python
+
+### Soft Skills
+- Problem-solving, teamwork, communication, project management
+
+
+## Education
+Mansfield senior high school
+- Genius cloud solutions internship
