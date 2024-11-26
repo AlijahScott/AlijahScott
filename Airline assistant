@@ -1,0 +1,1567 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/AlijahScott/AlijahScott/blob/main/Airline%20assistant\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "UhTFWyHq0W16",
+        "outputId": "b8fb5f9b-0780-49ac-947b-67597aef4dc5"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Requirement already satisfied: openai in /usr/local/lib/python3.10/dist-packages (1.54.4)\n",
+            "Requirement already satisfied: anyio<5,>=3.5.0 in /usr/local/lib/python3.10/dist-packages (from openai) (3.7.1)\n",
+            "Requirement already satisfied: distro<2,>=1.7.0 in /usr/local/lib/python3.10/dist-packages (from openai) (1.9.0)\n",
+            "Requirement already satisfied: httpx<1,>=0.23.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.27.2)\n",
+            "Requirement already satisfied: jiter<1,>=0.4.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.7.1)\n",
+            "Requirement already satisfied: pydantic<3,>=1.9.0 in /usr/local/lib/python3.10/dist-packages (from openai) (2.9.2)\n",
+            "Requirement already satisfied: sniffio in /usr/local/lib/python3.10/dist-packages (from openai) (1.3.1)\n",
+            "Requirement already satisfied: tqdm>4 in /usr/local/lib/python3.10/dist-packages (from openai) (4.66.6)\n",
+            "Requirement already satisfied: typing-extensions<5,>=4.11 in /usr/local/lib/python3.10/dist-packages (from openai) (4.12.2)\n",
+            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (3.10)\n",
+            "Requirement already satisfied: exceptiongroup in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (1.2.2)\n",
+            "Requirement already satisfied: certifi in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (2024.8.30)\n",
+            "Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (1.0.7)\n",
+            "Requirement already satisfied: h11<0.15,>=0.13 in /usr/local/lib/python3.10/dist-packages (from httpcore==1.*->httpx<1,>=0.23.0->openai) (0.14.0)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.23.4 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (2.23.4)\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install openai\n",
+        "import base64\n",
+        "from io import BytesIO\n",
+        "from PIL import Image\n",
+        "import openai  # Import the openai module\n",
+        "import os\n",
+        "import time\n",
+        "\n",
+        "# Set your OpenAI API key\n",
+        "# Replace 'YOUR_API_KEY' with your actual API key\n",
+        "openai.api_key = os.environ.get(\"OPENAI_API_KEY\") or \"YOUR_API_KEY\"\n",
+        "\n",
+        "def artist(city):\n",
+        "    while True:  # Keep trying until successful\n",
+        "        try:\n",
+        "            image_response = openai.images.generate(\n",
+        "                model=\"dall-e-3\",\n",
+        "                prompt=f\"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant pop-art style\",\n",
+        "                size=\"1024x1024\",\n",
+        "                n=1,\n",
+        "                response_format=\"b64_json\",\n",
+        "            )\n",
+        "            image_base64 = image_response.data[0].b64_json\n",
+        "            image_data = base64.b64decode(image_base64)\n",
+        "            return Image.open(BytesIO(image_data))\n",
+        "        except openai.RateLimitError:  # Correctly catch the RateLimitError\n",
+        "            print(\"Rate limit hit. Waiting for 60 seconds...\")\n",
+        "            time.sleep(60)  # Wait for 60 seconds before retrying"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "L42WgWgwyzZi",
+        "outputId": "8e3ef90c-2536-401f-b4d6-6d58368abee5"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Collecting python-dotenv\n",
+            "  Downloading python_dotenv-1.0.1-py3-none-any.whl.metadata (23 kB)\n",
+            "Downloading python_dotenv-1.0.1-py3-none-any.whl (19 kB)\n",
+            "Installing collected packages: python-dotenv\n",
+            "Successfully installed python-dotenv-1.0.1\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install python-dotenv"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "a-fV5o5gCsVQ"
+      },
+      "outputs": [],
+      "source": [
+        "OPENAI_API_KEY = \"YOUR_API_KEY\""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ib2GTTkXCku9",
+        "outputId": "b1bc66b9-2da7-488a-f813-1bdf149f16fc"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "env: OPENAI_API_KEY=YOUR_API_KEY\n"
+          ]
+        }
+      ],
+      "source": [
+        "%env OPENAI_API_KEY=YOUR_API_KEY"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "DZgqJJNsCYfB",
+        "outputId": "cd5dcf2e-f8f8-4845-b92e-f7fcb3822af9"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "OpenAI API Key exists and begins sk-proj-\n"
+          ]
+        }
+      ],
+      "source": [
+        "# imports\n",
+        "\n",
+        "import os\n",
+        "import json\n",
+        "from dotenv import load_dotenv\n",
+        "from openai import OpenAI\n",
+        "import gradio as gr\n",
+        "\n",
+        "# Initialization\n",
+        "\n",
+        "load_dotenv()\n",
+        "\n",
+        "# Get the OpenAI API key from the environment variable named 'OPENAI_API_KEY'\n",
+        "openai_api_key = os.getenv('OPENAI_API_KEY')\n",
+        "if openai_api_key:\n",
+        "    print(f\"OpenAI API Key exists and begins {openai_api_key[:8]}\")\n",
+        "else:\n",
+        "    print(\"OpenAI API Key not set. Please set it in your .env file or as an environment variable.\")\n",
+        "\n",
+        "MODEL = \"gpt-4o-mini\"\n",
+        "# Pass the API key to the OpenAI constructor\n",
+        "openai = OpenAI(api_key=openai_api_key)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "w2Im_DDsB6hd",
+        "outputId": "fa6dc2ea-2acf-4bfe-a4d6-c6a712ed6a56"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Collecting gradio\n",
+            "  Downloading gradio-5.6.0-py3-none-any.whl.metadata (16 kB)\n",
+            "Collecting aiofiles<24.0,>=22.0 (from gradio)\n",
+            "  Downloading aiofiles-23.2.1-py3-none-any.whl.metadata (9.7 kB)\n",
+            "Requirement already satisfied: anyio<5.0,>=3.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.7.1)\n",
+            "Collecting fastapi<1.0,>=0.115.2 (from gradio)\n",
+            "  Downloading fastapi-0.115.5-py3-none-any.whl.metadata (27 kB)\n",
+            "Collecting ffmpy (from gradio)\n",
+            "  Downloading ffmpy-0.4.0-py3-none-any.whl.metadata (2.9 kB)\n",
+            "Collecting gradio-client==1.4.3 (from gradio)\n",
+            "  Downloading gradio_client-1.4.3-py3-none-any.whl.metadata (7.1 kB)\n",
+            "Requirement already satisfied: httpx>=0.24.1 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.27.2)\n",
+            "Requirement already satisfied: huggingface-hub>=0.25.1 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.26.2)\n",
+            "Requirement already satisfied: jinja2<4.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.1.4)\n",
+            "Collecting markupsafe~=2.0 (from gradio)\n",
+            "  Downloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.0 kB)\n",
+            "Requirement already satisfied: numpy<3.0,>=1.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (1.26.4)\n",
+            "Requirement already satisfied: orjson~=3.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.10.11)\n",
+            "Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from gradio) (24.2)\n",
+            "Requirement already satisfied: pandas<3.0,>=1.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (2.2.2)\n",
+            "Requirement already satisfied: pillow<12.0,>=8.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (11.0.0)\n",
+            "Requirement already satisfied: pydantic>=2.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (2.9.2)\n",
+            "Collecting pydub (from gradio)\n",
+            "  Downloading pydub-0.25.1-py2.py3-none-any.whl.metadata (1.4 kB)\n",
+            "Collecting python-multipart==0.0.12 (from gradio)\n",
+            "  Downloading python_multipart-0.0.12-py3-none-any.whl.metadata (1.9 kB)\n",
+            "Requirement already satisfied: pyyaml<7.0,>=5.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (6.0.2)\n",
+            "Collecting ruff>=0.2.2 (from gradio)\n",
+            "  Downloading ruff-0.7.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (25 kB)\n",
+            "Collecting safehttpx<1.0,>=0.1.1 (from gradio)\n",
+            "  Downloading safehttpx-0.1.1-py3-none-any.whl.metadata (4.1 kB)\n",
+            "Collecting semantic-version~=2.0 (from gradio)\n",
+            "  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)\n",
+            "Collecting starlette<1.0,>=0.40.0 (from gradio)\n",
+            "  Downloading starlette-0.41.3-py3-none-any.whl.metadata (6.0 kB)\n",
+            "Collecting tomlkit==0.12.0 (from gradio)\n",
+            "  Downloading tomlkit-0.12.0-py3-none-any.whl.metadata (2.7 kB)\n",
+            "Requirement already satisfied: typer<1.0,>=0.12 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.13.0)\n",
+            "Requirement already satisfied: typing-extensions~=4.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (4.12.2)\n",
+            "Collecting uvicorn>=0.14.0 (from gradio)\n",
+            "  Downloading uvicorn-0.32.1-py3-none-any.whl.metadata (6.6 kB)\n",
+            "Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from gradio-client==1.4.3->gradio) (2024.10.0)\n",
+            "Collecting websockets<13.0,>=10.0 (from gradio-client==1.4.3->gradio)\n",
+            "  Downloading websockets-12.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)\n",
+            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (3.10)\n",
+            "Requirement already satisfied: sniffio>=1.1 in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (1.3.1)\n",
+            "Requirement already satisfied: exceptiongroup in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (1.2.2)\n",
+            "Requirement already satisfied: certifi in /usr/local/lib/python3.10/dist-packages (from httpx>=0.24.1->gradio) (2024.8.30)\n",
+            "Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.10/dist-packages (from httpx>=0.24.1->gradio) (1.0.7)\n",
+            "Requirement already satisfied: h11<0.15,>=0.13 in /usr/local/lib/python3.10/dist-packages (from httpcore==1.*->httpx>=0.24.1->gradio) (0.14.0)\n",
+            "Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (3.16.1)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (2.32.3)\n",
+            "Requirement already satisfied: tqdm>=4.42.1 in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (4.66.6)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2.8.2)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2024.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2024.2)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/dist-packages (from pydantic>=2.0->gradio) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.23.4 in /usr/local/lib/python3.10/dist-packages (from pydantic>=2.0->gradio) (2.23.4)\n",
+            "Requirement already satisfied: click>=8.0.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (8.1.7)\n",
+            "Requirement already satisfied: shellingham>=1.3.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (1.5.4)\n",
+            "Requirement already satisfied: rich>=10.11.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (13.9.4)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.8.2->pandas<3.0,>=1.0->gradio) (1.16.0)\n",
+            "Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.10/dist-packages (from rich>=10.11.0->typer<1.0,>=0.12->gradio) (3.0.0)\n",
+            "Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich>=10.11.0->typer<1.0,>=0.12->gradio) (2.18.0)\n",
+            "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub>=0.25.1->gradio) (3.4.0)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub>=0.25.1->gradio) (2.2.3)\n",
+            "Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->typer<1.0,>=0.12->gradio) (0.1.2)\n",
+            "Downloading gradio-5.6.0-py3-none-any.whl (57.1 MB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m57.1/57.1 MB\u001b[0m \u001b[31m11.8 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading gradio_client-1.4.3-py3-none-any.whl (320 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m320.1/320.1 kB\u001b[0m \u001b[31m18.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading python_multipart-0.0.12-py3-none-any.whl (23 kB)\n",
+            "Downloading tomlkit-0.12.0-py3-none-any.whl (37 kB)\n",
+            "Downloading aiofiles-23.2.1-py3-none-any.whl (15 kB)\n",
+            "Downloading fastapi-0.115.5-py3-none-any.whl (94 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m94.9/94.9 kB\u001b[0m \u001b[31m6.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (25 kB)\n",
+            "Downloading ruff-0.7.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.1 MB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m11.1/11.1 MB\u001b[0m \u001b[31m92.8 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading safehttpx-0.1.1-py3-none-any.whl (8.4 kB)\n",
+            "Downloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)\n",
+            "Downloading starlette-0.41.3-py3-none-any.whl (73 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m73.2/73.2 kB\u001b[0m \u001b[31m4.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading uvicorn-0.32.1-py3-none-any.whl (63 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m63.8/63.8 kB\u001b[0m \u001b[31m4.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading ffmpy-0.4.0-py3-none-any.whl (5.8 kB)\n",
+            "Downloading pydub-0.25.1-py2.py3-none-any.whl (32 kB)\n",
+            "Downloading websockets-12.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (130 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m130.2/130.2 kB\u001b[0m \u001b[31m7.3 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hInstalling collected packages: pydub, websockets, uvicorn, tomlkit, semantic-version, ruff, python-multipart, markupsafe, ffmpy, aiofiles, starlette, safehttpx, gradio-client, fastapi, gradio\n",
+            "  Attempting uninstall: markupsafe\n",
+            "    Found existing installation: MarkupSafe 3.0.2\n",
+            "    Uninstalling MarkupSafe-3.0.2:\n",
+            "      Successfully uninstalled MarkupSafe-3.0.2\n",
+            "Successfully installed aiofiles-23.2.1 fastapi-0.115.5 ffmpy-0.4.0 gradio-5.6.0 gradio-client-1.4.3 markupsafe-2.1.5 pydub-0.25.1 python-multipart-0.0.12 ruff-0.7.4 safehttpx-0.1.1 semantic-version-2.10.0 starlette-0.41.3 tomlkit-0.12.0 uvicorn-0.32.1 websockets-12.0\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install gradio"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "BFcl4bwPBM18"
+      },
+      "source": [
+        "Project - Airline AI Assistant\n",
+        "We'll now bring together what we've learned to make an AI Customer Support assistant for an Airline"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "g07toobDBDGa"
+      },
+      "outputs": [],
+      "source": [
+        "# imports\n",
+        "\n",
+        "import os\n",
+        "import json\n",
+        "from dotenv import load_dotenv\n",
+        "from openai import OpenAI\n",
+        "import gradio as gr"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "bXvwTnvkBKkX",
+        "outputId": "3bf331b7-85f1-4ecc-8c76-fbb8260e267d"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "OpenAI API Key not set\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Initialization\n",
+        "\n",
+        "load_dotenv()\n",
+        "\n",
+        "openai_api_key = os.getenv('YOUR_API_KEY')\n",
+        "if openai_api_key:\n",
+        "    print(f\"OpenAI API Key exists and begins {openai_api_key[:8]}\")\n",
+        "else:\n",
+        "    print(\"OpenAI API Key not set\")\n",
+        "\n",
+        "MODEL = \"gpt-4o-mini\"\n",
+        "openai = OpenAI()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Kis8UvIEBR9m"
+      },
+      "outputs": [],
+      "source": [
+        "system_message = \"You are a helpful assistant for an Airline called FlightAI. \"\n",
+        "system_message += \"Give short, courteous answers, no more than 1 sentence. \"\n",
+        "system_message += \"Always be accurate. If you don't know the answer, say so.\""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 648
+        },
+        "id": "pTkAvw3QBW7K",
+        "outputId": "db94886a-e6f2-445d-ac64-1e9e335f08e3"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Running Gradio in a Colab notebook requires sharing enabled. Automatically setting `share=True` (you can turn this off by setting `share=False` in `launch()` explicitly).\n",
+            "\n",
+            "Colab notebook detected. To show errors in colab notebook, set debug=True in launch()\n",
+            "* Running on public URL: https://b947f972aaf52b9b4c.gradio.live\n",
+            "\n",
+            "This share link expires in 72 hours. For free permanent hosting and GPU upgrades, run `gradio deploy` from the terminal in the working directory to deploy to Hugging Face Spaces (https://huggingface.co/spaces)\n"
+          ]
+        },
+        {
+          "data": {
+            "text/html": [
+              "<div><iframe src=\"https://b947f972aaf52b9b4c.gradio.live\" width=\"100%\" height=\"500\" allow=\"autoplay; camera; microphone; clipboard-read; clipboard-write;\" frameborder=\"0\" allowfullscreen></iframe></div>"
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {},
+          "output_type": "display_data"
+        },
+        {
+          "data": {
+            "text/plain": []
+          },
+          "execution_count": 11,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "# This function looks rather simpler than the one from my video, because we're taking advantage of the latest Gradio updates\n",
+        "\n",
+        "def chat(message, history):\n",
+        "    messages = [{\"role\": \"system\", \"content\": system_message}] + history + [{\"role\": \"user\", \"content\": message}]\n",
+        "    response = openai.chat.completions.create(model=MODEL, messages=messages)\n",
+        "    return response.choices[0].message.content\n",
+        "\n",
+        "gr.ChatInterface(fn=chat, type=\"messages\").launch()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "QWZANsrLBZgW"
+      },
+      "source": [
+        "Tools\n",
+        "Tools are an incredibly powerful feature provided by the frontier LLMs.\n",
+        "\n",
+        "With tools, you can write a function, and have the LLM call that function as part of its response.\n",
+        "\n",
+        "Sounds almost spooky.. we're giving it the power to run code on our machine?\n",
+        "\n",
+        "Well, kinda."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "1wZGgT-oBbzi"
+      },
+      "outputs": [],
+      "source": [
+        "# Let's start by making a useful function\n",
+        "\n",
+        "ticket_prices = {\"london\": \"$799\", \"paris\": \"$899\", \"tokyo\": \"$1400\", \"berlin\": \"$499\"}\n",
+        "\n",
+        "def get_ticket_price(destination_city):\n",
+        "    print(f\"Tool get_ticket_price called for {destination_city}\")\n",
+        "    city = destination_city.lower()\n",
+        "    return ticket_prices.get(city, \"Unknown\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 53
+        },
+        "id": "UGCPjqUXBe0Y",
+        "outputId": "4f9aa051-f598-4445-d73e-8bc5880c3cee"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Tool get_ticket_price called for London\n"
+          ]
+        },
+        {
+          "data": {
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "string"
+            },
+            "text/plain": [
+              "'$799'"
+            ]
+          },
+          "execution_count": 13,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "get_ticket_price(\"London\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "YNauxBG1BhPb"
+      },
+      "outputs": [],
+      "source": [
+        "# There's a particular dictionary structure that's required to describe our function:\n",
+        "\n",
+        "price_function = {\n",
+        "    \"name\": \"get_ticket_price\",\n",
+        "    \"description\": \"Get the price of a return ticket to the destination city. Call this whenever you need to know the ticket price, for example when a customer asks 'How much is a ticket to this city'\",\n",
+        "    \"parameters\": {\n",
+        "        \"type\": \"object\",\n",
+        "        \"properties\": {\n",
+        "            \"destination_city\": {\n",
+        "                \"type\": \"string\",\n",
+        "                \"description\": \"The city that the customer wants to travel to\",\n",
+        "            },\n",
+        "        },\n",
+        "        \"required\": [\"destination_city\"],\n",
+        "        \"additionalProperties\": False\n",
+        "    }\n",
+        "}"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "VBgWHYJiBkW_"
+      },
+      "outputs": [],
+      "source": [
+        "# And this is included in a list of tools:\n",
+        "\n",
+        "tools = [{\"type\": \"function\", \"function\": price_function}]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "DThAiDHsBnLJ"
+      },
+      "source": [
+        "Getting OpenAI to use our Tool\n",
+        "There's some fiddly stuff to allow OpenAI \"to call our tool\"\n",
+        "\n",
+        "What we actually do is give the LLM the opportunity to inform us that it wants us to run the tool.\n",
+        "\n",
+        "Here's how the new chat function looks:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Eo1vlXuyGVv0"
+      },
+      "outputs": [],
+      "source": [
+        "def chat(message, history):\n",
+        "    messages = [{\"role\": \"system\", \"content\": system_message}] + history + [{\"role\": \"user\", \"content\": message}]\n",
+        "    response = openai.chat.completions.create(model=MODEL, messages=messages, tools=tools)\n",
+        "\n",
+        "    if response.choices[0].finish_reason==\"tool_calls\":\n",
+        "        message = response.choices[0].message\n",
+        "        response, city = handle_tool_call(message)\n",
+        "        messages.append(message)\n",
+        "        messages.append(response)\n",
+        "        response = openai.chat.completions.create(model=MODEL, messages=messages)\n",
+        "\n",
+        "    return response.choices[0].message.content"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "v19iq_kNGYOh"
+      },
+      "outputs": [],
+      "source": [
+        "# We have to write that function handle_tool_call:\n",
+        "\n",
+        "def handle_tool_call(message):\n",
+        "    tool_call = message.tool_calls[0]\n",
+        "    arguments = json.loads(tool_call.function.arguments)\n",
+        "    city = arguments.get('destination_city')\n",
+        "    price = get_ticket_price(city)\n",
+        "    response = {\n",
+        "        \"role\": \"tool\",\n",
+        "        \"content\": json.dumps({\"destination_city\": city,\"price\": price}),\n",
+        "        \"tool_call_id\": message.tool_calls[0].id\n",
+        "    }\n",
+        "    return response, city"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 648
+        },
+        "id": "WLjLjEjEGaH0",
+        "outputId": "14059222-7f89-43b3-8b2c-8352429bc44c"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Running Gradio in a Colab notebook requires sharing enabled. Automatically setting `share=True` (you can turn this off by setting `share=False` in `launch()` explicitly).\n",
+            "\n",
+            "Colab notebook detected. To show errors in colab notebook, set debug=True in launch()\n",
+            "* Running on public URL: https://3cba4f42eaddb5d357.gradio.live\n",
+            "\n",
+            "This share link expires in 72 hours. For free permanent hosting and GPU upgrades, run `gradio deploy` from the terminal in the working directory to deploy to Hugging Face Spaces (https://huggingface.co/spaces)\n"
+          ]
+        },
+        {
+          "data": {
+            "text/html": [
+              "<div><iframe src=\"https://3cba4f42eaddb5d357.gradio.live\" width=\"100%\" height=\"500\" allow=\"autoplay; camera; microphone; clipboard-read; clipboard-write;\" frameborder=\"0\" allowfullscreen></iframe></div>"
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {},
+          "output_type": "display_data"
+        },
+        {
+          "data": {
+            "text/plain": []
+          },
+          "execution_count": 19,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "gr.ChatInterface(fn=chat, type=\"messages\").launch()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "25duUa7NGdXj"
+      },
+      "source": [
+        "Let's go multi-modal!!\n",
+        "We can use DALL-E-3, the image generation model behind GPT-4o, to make us some images\n",
+        "\n",
+        "Let's put this in a function called artist.\n",
+        "\n",
+        "Price alert: each time I generate an image it costs about 4c - don't go crazy with images!"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "7PbZBDpUGftp"
+      },
+      "outputs": [],
+      "source": [
+        "# Some imports for handling images\n",
+        "\n",
+        "import base64\n",
+        "from io import BytesIO\n",
+        "from PIL import Image"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Mbn8nx-aGiV0"
+      },
+      "outputs": [],
+      "source": [
+        "def artist(city):\n",
+        "    image_response = openai.images.generate(\n",
+        "            model=\"dall-e-3\",\n",
+        "            prompt=f\"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant pop-art style\",\n",
+        "            size=\"1024x1024\",\n",
+        "            n=1,\n",
+        "            response_format=\"b64_json\",\n",
+        "        )\n",
+        "    image_base64 = image_response.data[0].b64_json\n",
+        "    image_data = base64.b64decode(image_base64)\n",
+        "    return Image.open(BytesIO(image_data))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FHIZtE5lBmRq",
+        "outputId": "d10ac5d6-3ced-4949-98b9-dba54603b266"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Requirement already satisfied: openai in /usr/local/lib/python3.10/dist-packages (1.54.4)\n",
+            "Requirement already satisfied: anyio<5,>=3.5.0 in /usr/local/lib/python3.10/dist-packages (from openai) (3.7.1)\n",
+            "Requirement already satisfied: distro<2,>=1.7.0 in /usr/local/lib/python3.10/dist-packages (from openai) (1.9.0)\n",
+            "Requirement already satisfied: httpx<1,>=0.23.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.27.2)\n",
+            "Requirement already satisfied: jiter<1,>=0.4.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.7.1)\n",
+            "Requirement already satisfied: pydantic<3,>=1.9.0 in /usr/local/lib/python3.10/dist-packages (from openai) (2.9.2)\n",
+            "Requirement already satisfied: sniffio in /usr/local/lib/python3.10/dist-packages (from openai) (1.3.1)\n",
+            "Requirement already satisfied: tqdm>4 in /usr/local/lib/python3.10/dist-packages (from openai) (4.66.6)\n",
+            "Requirement already satisfied: typing-extensions<5,>=4.11 in /usr/local/lib/python3.10/dist-packages (from openai) (4.12.2)\n",
+            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (3.10)\n",
+            "Requirement already satisfied: exceptiongroup in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (1.2.2)\n",
+            "Requirement already satisfied: certifi in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (2024.8.30)\n",
+            "Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (1.0.7)\n",
+            "Requirement already satisfied: h11<0.15,>=0.13 in /usr/local/lib/python3.10/dist-packages (from httpcore==1.*->httpx<1,>=0.23.0->openai) (0.14.0)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.23.4 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (2.23.4)\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Some imports for handling images\n",
+        "!pip install openai\n",
+        "import base64\n",
+        "from io import BytesIO\n",
+        "from PIL import Image\n",
+        "import openai # Import the openai module\n",
+        "\n",
+        "\n",
+        "def artist(city):\n",
+        "    image_response = openai.images.generate(\n",
+        "            model=\"dall-e-3\",\n",
+        "            prompt=f\"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant pop-art style\",\n",
+        "            size=\"1024x1024\",\n",
+        "            n=1,\n",
+        "            response_format=\"b64_json\",\n",
+        "        )\n",
+        "    image_base64 = image_response.data[0].b64_json\n",
+        "    image_data = base64.b64decode(image_base64)\n",
+        "    return Image.open(BytesIO(image_data))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6hPt1z-UB26A",
+        "outputId": "abecbf9b-11bd-4721-9235-0a8565f55668"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Requirement already satisfied: openai in /usr/local/lib/python3.10/dist-packages (1.54.4)\n",
+            "Requirement already satisfied: anyio<5,>=3.5.0 in /usr/local/lib/python3.10/dist-packages (from openai) (3.7.1)\n",
+            "Requirement already satisfied: distro<2,>=1.7.0 in /usr/local/lib/python3.10/dist-packages (from openai) (1.9.0)\n",
+            "Requirement already satisfied: httpx<1,>=0.23.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.27.2)\n",
+            "Requirement already satisfied: jiter<1,>=0.4.0 in /usr/local/lib/python3.10/dist-packages (from openai) (0.7.1)\n",
+            "Requirement already satisfied: pydantic<3,>=1.9.0 in /usr/local/lib/python3.10/dist-packages (from openai) (2.9.2)\n",
+            "Requirement already satisfied: sniffio in /usr/local/lib/python3.10/dist-packages (from openai) (1.3.1)\n",
+            "Requirement already satisfied: tqdm>4 in /usr/local/lib/python3.10/dist-packages (from openai) (4.66.6)\n",
+            "Requirement already satisfied: typing-extensions<5,>=4.11 in /usr/local/lib/python3.10/dist-packages (from openai) (4.12.2)\n",
+            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (3.10)\n",
+            "Requirement already satisfied: exceptiongroup in /usr/local/lib/python3.10/dist-packages (from anyio<5,>=3.5.0->openai) (1.2.2)\n",
+            "Requirement already satisfied: certifi in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (2024.8.30)\n",
+            "Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.10/dist-packages (from httpx<1,>=0.23.0->openai) (1.0.7)\n",
+            "Requirement already satisfied: h11<0.15,>=0.13 in /usr/local/lib/python3.10/dist-packages (from httpcore==1.*->httpx<1,>=0.23.0->openai) (0.14.0)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.23.4 in /usr/local/lib/python3.10/dist-packages (from pydantic<3,>=1.9.0->openai) (2.23.4)\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Some imports for handling images\n",
+        "!pip install openai\n",
+        "import base64\n",
+        "from io import BytesIO\n",
+        "from PIL import Image\n",
+        "import openai # Import the openai module\n",
+        "import os\n",
+        "\n",
+        "# Set your OpenAI API key\n",
+        "# Replace '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' with your actual API key\n",
+        "openai.api_key = os.environ.get(\"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\") or \"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\"\n",
+        "# First tries to get the key from environment variable, if not found, uses the literal\n",
+        "# You can set the environment variable with:\n",
+        "# !export OPENAI_API_KEY='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' (on Linux/Mac)\n",
+        "# or\n",
+        "# setx OPENAI_API_KEY \"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\" (on Windows)\n",
+        "\n",
+        "\n",
+        "def artist(city):\n",
+        "    image_response = openai.images.generate(\n",
+        "            model=\"dall-e-3\",\n",
+        "            prompt=f\"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant pop-art style\",\n",
+        "            size=\"1024x1024\",\n",
+        "            n=1,\n",
+        "            response_format=\"b64_json\",\n",
+        "        )\n",
+        "    image_base64 = image_response.data[0].b64_json\n",
+        "    image_data = base64.b64decode(image_base64)\n",
+        "    return Image.open(BytesIO(image_data))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "background_save": true,
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "A6kuSylnGlHc",
+        "outputId": "fe8c2b71-047c-4b4d-eab0-ef81ed0eca55"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n",
+            "Rate limit hit. Waiting for 60 seconds...\n"
+          ]
+        }
+      ],
+      "source": [
+        "image = artist(\"New York City\")\n",
+        "display(image)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "C7UV59mx0LDl"
+      },
+      "outputs": [],
+      "source": [
+        "import base64\n",
+        "from io import BytesIO\n",
+        "from PIL import Image\n",
+        "import openai\n",
+        "import os\n",
+        "import time\n",
+        "\n",
+        "# ... (your existing code for setting the API key) ...\n",
+        "\n",
+        "def artist(city):\n",
+        "    while True:  # Introduce a loop for retrying\n",
+        "        try:\n",
+        "            image_response = openai.images.generate(\n",
+        "                model=\"dall-e-3\",\n",
+        "                prompt=f\"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant pop-art style\",\n",
+        "                size=\"1024x1024\",\n",
+        "                quality=\"standard\",\n",
+        "                n=1,\n",
+        "            )\n",
+        "            image_base64 = image_response.data[0].b64_json # This line and the following were missing indentation\n",
+        "            image_data = base64.b64decode(image_base64) # This line and the following were missing indentation\n",
+        "            return Image.open(BytesIO(image_data)) # This line and the following were missing indentation\n",
+        "        except openai.error.RateLimitError:\n",
+        "            print(\"Rate limit hit. Waiting for 10 seconds...\") # Handle rate limit errors by waiting\n",
+        "            time.sleep(10)\n",
+        "        except openai.error.APIError as e:\n",
+        "            print(f\"OpenAI API error: {e}\")\n",
+        "            break  # Exit the loop on other API errors\n",
+        "        except Exception as e:\n",
+        "            print(f\"An unexpected error occurred: {e}\")\n",
+        "            break  # Exit the loop on unexpected errors"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "spXAgcxbGnRM"
+      },
+      "source": [
+        "Audio\n",
+        "And let's make a function talker that uses OpenAI's speech model to generate Audio\n",
+        "\n",
+        "Troubleshooting Audio issues\n",
+        "If you have any problems running this code below (like a FileNotFound error, or a warning of a missing package), you may need to install FFmpeg, a very popular audio utility.\n",
+        "\n",
+        "For PC Users\n",
+        "\n",
+        "Detailed instructions are here and summary instructions:\n",
+        "\n",
+        "Download FFmpeg from the official website: https://ffmpeg.org/download.html\n",
+        "\n",
+        "Extract the downloaded files to a location on your computer (e.g., C:\\ffmpeg)\n",
+        "\n",
+        "Add the FFmpeg bin folder to your system PATH:\n",
+        "\n",
+        "Right-click on 'This PC' or 'My Computer' and select 'Properties'\n",
+        "Click on 'Advanced system settings'\n",
+        "Click on 'Environment Variables'\n",
+        "Under 'System variables', find and edit 'Path'\n",
+        "Add a new entry with the path to your FFmpeg bin folder (e.g., C:\\ffmpeg\\bin)\n",
+        "Restart your command prompt, and within Jupyter Lab do Kernel -> Restart kernel, to pick up the changes\n",
+        "Open a new command prompt and run this to make sure it's installed OK ffmpeg -version\n",
+        "For Mac Users\n",
+        "\n",
+        "Install homebrew if you don't have it already by running this in a Terminal window and following any instructions:\n",
+        "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"\n",
+        "\n",
+        "Then install FFmpeg with brew install ffmpeg\n",
+        "\n",
+        "Verify your installation with ffmpeg -version and if everything is good, within Jupyter Lab do Kernel -> Restart kernel to pick up the changes\n",
+        "\n",
+        "Message me or email me at ed@edwarddonner.com with any problems!\n",
+        "\n",
+        "To check you now have ffmpeg and can access it here\n",
+        "Excecute the next cell to see if you get a version number. (Putting an exclamation mark before something in Jupyter Lab tells it to run it as a terminal command rather than python code).\n",
+        "\n",
+        "If this doesn't work, you may need to actually save and close down your Jupyter lab, and start it again from a new Terminal window (Mac) or Anaconda prompt (PC), remembering to activate the llms environment. This ensures you pick up ffmpeg.\n",
+        "\n",
+        "And if that doesn't work, please contact me!"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "3tGeMj0NG1lg"
+      },
+      "outputs": [],
+      "source": [
+        "!ffmpeg -version"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "KTzBvwkCG4Jf"
+      },
+      "source": [
+        "For Mac users\n",
+        "This version should work fine for you. It might work for Windows users too, but you might get a Permissions error writing to a temp file. If so, see the next section!\n",
+        "\n",
+        "As always, if you have problems, please contact me! (You could also comment out the audio talker() in the later code if you're less interested in audio generation)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "qPjN_H_MG-jV"
+      },
+      "outputs": [],
+      "source": [
+        "from pydub import AudioSegment\n",
+        "from pydub.playback import play\n",
+        "\n",
+        "def talker(message):\n",
+        "    response = openai.audio.speech.create(\n",
+        "      model=\"tts-1\",\n",
+        "      voice=\"onyx\",    # Also, try replacing onyx with alloy\n",
+        "      input=message\n",
+        "    )\n",
+        "\n",
+        "    audio_stream = BytesIO(response.content)\n",
+        "    audio = AudioSegment.from_file(audio_stream, format=\"mp3\")\n",
+        "    play(audio)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "SmOANGnEHBbX"
+      },
+      "outputs": [],
+      "source": [
+        "talker(\"Well, hi there\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ASLsxd3YHD68"
+      },
+      "source": [
+        "For Windows users\n",
+        "if you get a permissions error writing to a temp file, then this code should work instead.\n",
+        "A collaboration between students Mark M. and Patrick H. and Claude got this resolved!\n",
+        "\n",
+        "Below are 3 variations - hopefully one of them will work on your PC. If not, message me please!\n",
+        "\n",
+        "PC Variation 1"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "R3FKx9bZHF4l"
+      },
+      "outputs": [],
+      "source": [
+        "import tempfile\n",
+        "import subprocess\n",
+        "from io import BytesIO\n",
+        "from pydub import AudioSegment\n",
+        "import time\n",
+        "\n",
+        "def play_audio(audio_segment):\n",
+        "    temp_dir = tempfile.gettempdir()\n",
+        "    temp_path = os.path.join(temp_dir, \"temp_audio.wav\")\n",
+        "    try:\n",
+        "        audio_segment.export(temp_path, format=\"wav\")\n",
+        "        time.sleep(3) # Student Dominic found that this was needed. You could also try commenting out to see if not needed on your PC\n",
+        "        subprocess.call([\n",
+        "            \"ffplay\",\n",
+        "            \"-nodisp\",\n",
+        "            \"-autoexit\",\n",
+        "            \"-hide_banner\",\n",
+        "            temp_path\n",
+        "        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n",
+        "    finally:\n",
+        "        try:\n",
+        "            os.remove(temp_path)\n",
+        "        except Exception:\n",
+        "            pass\n",
+        "\n",
+        "def talker(message):\n",
+        "    response = openai.audio.speech.create(\n",
+        "        model=\"tts-1\",\n",
+        "        voice=\"onyx\",  # Also, try replacing onyx with alloy\n",
+        "        input=message\n",
+        "    )\n",
+        "    audio_stream = BytesIO(response.content)\n",
+        "    audio = AudioSegment.from_file(audio_stream, format=\"mp3\")\n",
+        "    play_audio(audio)\n",
+        "\n",
+        "talker(\"Well hi there\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "IYhWJv88HMKO"
+      },
+      "source": [
+        "PC Variation 2"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "2yeihtCXHO7R"
+      },
+      "outputs": [],
+      "source": [
+        "import os\n",
+        "from pydub import AudioSegment\n",
+        "from pydub.playback import play\n",
+        "from io import BytesIO\n",
+        "\n",
+        "def talker(message):\n",
+        "    # Set a custom directory for temporary files on Windows\n",
+        "    custom_temp_dir = os.path.expanduser(\"~/Documents/temp_audio\")\n",
+        "    os.environ['TEMP'] = custom_temp_dir  # You can also use 'TMP' if necessary\n",
+        "\n",
+        "    # Create the folder if it doesn't exist\n",
+        "    if not os.path.exists(custom_temp_dir):\n",
+        "        os.makedirs(custom_temp_dir)\n",
+        "\n",
+        "    response = openai.audio.speech.create(\n",
+        "        model=\"tts-1\",\n",
+        "        voice=\"onyx\",  # Also, try replacing onyx with alloy\n",
+        "        input=message\n",
+        "    )\n",
+        "\n",
+        "    audio_stream = BytesIO(response.content)\n",
+        "    audio = AudioSegment.from_file(audio_stream, format=\"mp3\")\n",
+        "\n",
+        "    play(audio)\n",
+        "\n",
+        "talker(\"Well hi there\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "SFD8D70iHPW3"
+      },
+      "source": [
+        "PC Variation 3\n",
+        "Let's try a completely different sound library\n",
+        "First run the next cell to install a new library, then try the cell below it."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "yCxFl4_jHSG5"
+      },
+      "outputs": [],
+      "source": [
+        "!pip install simpleaudio"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "mtFvnIb8Cipe"
+      },
+      "outputs": [],
+      "source": [
+        "!pip install simpleaudio\n",
+        "!pip install pyaudio\n",
+        "\n",
+        "from pydub import AudioSegment\n",
+        "from io import BytesIO\n",
+        "import tempfile\n",
+        "import os\n",
+        "import simpleaudio as sa\n",
+        "\n",
+        "# Try adding this to help manage audio devices\n",
+        "import pyaudio\n",
+        "p = pyaudio.PyAudio()\n",
+        "info = p.get_host_api_info_by_index(0)\n",
+        "numdevices = info.get('deviceCount')\n",
+        "for i in range(0, numdevices):\n",
+        "        if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:\n",
+        "            print (\"Input Device id \", i, \" - \", p.get_device_info_by_host_api_device_index(0, i).get('name'))\n",
+        "\n",
+        "        if (p.get_device_info_by_host_api_device_index(0, i).get('maxOutputChannels')) > 0:\n",
+        "            print (\"Output Device id \", i, \" - \", p.get_device_info_by_host_api_device_index(0, i).get('name'))\n",
+        "\n",
+        "\n",
+        "def talker(message):\n",
+        "    response = openai.audio.speech.create(\n",
+        "        model=\"tts-1\",\n",
+        "        voice=\"onyx\",  #"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "es1tyLvBHVeF"
+      },
+      "outputs": [],
+      "source": [
+        "\n",
+        "from pydub import AudioSegment\n",
+        "from io import BytesIO\n",
+        "import tempfile\n",
+        "import os\n",
+        "import simpleaudio as sa\n",
+        "\n",
+        "def talker(message):\n",
+        "    response = openai.audio.speech.create(\n",
+        "        model=\"tts-1\",\n",
+        "        voice=\"onyx\",  # Also, try replacing onyx with alloy\n",
+        "        input=message\n",
+        "    )\n",
+        "\n",
+        "    audio_stream = BytesIO(response.content)\n",
+        "    audio = AudioSegment.from_file(audio_stream, format=\"mp3\")\n",
+        "\n",
+        "    # Create a temporary file in a folder where you have write permissions\n",
+        "    with tempfile.NamedTemporaryFile(suffix=\".wav\", delete=False, dir=os.path.expanduser(\"~/Documents\")) as temp_audio_file:\n",
+        "        temp_file_name = temp_audio_file.name\n",
+        "        audio.export(temp_file_name, format=\"wav\")\n",
+        "\n",
+        "    # Load and play audio using simpleaudio\n",
+        "    wave_obj = sa.WaveObject.from_wave_file(temp_file_name)\n",
+        "    play_obj = wave_obj.play()\n",
+        "    play_obj.wait_done()  # Wait for playback to finish\n",
+        "\n",
+        "    # Clean up the temporary file afterward\n",
+        "    os.remove(temp_file_name)\n",
+        "\n",
+        "talker(\"Well hi there\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "oYvhbCAXHb8Z"
+      },
+      "source": [
+        "PC Users - if none of those 3 variations worked!\n",
+        "Please get in touch with me. I'm sorry this is causing problems! We'll figure it out.\n",
+        "\n",
+        "Alternatively: playing audio from your PC isn't super-critical for this course, and you can feel free to focus on image generation and skip audio for now, or come back to it later.\n",
+        "\n",
+        "Our Agent Framework\n",
+        "The term 'Agentic AI' and Agentization is an umbrella term that refers to a number of techniques, such as:\n",
+        "\n",
+        "Breaking a complex problem into smaller steps, with multiple LLMs carrying out specialized tasks\n",
+        "The ability for LLMs to use Tools to give them additional capabilities\n",
+        "The 'Agent Environment' which allows Agents to collaborate\n",
+        "An LLM can act as the Planner, dividing bigger tasks into smaller ones for the specialists\n",
+        "The concept of an Agent having autonomy / agency, beyond just responding to a prompt - such as Memory\n",
+        "We're showing 1 and 2 here, and to a lesser extent 3 and 5. In week 8 we will do the lot!"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "pLZtc6iqHfFO"
+      },
+      "outputs": [],
+      "source": [
+        "def chat(history):\n",
+        "    messages = [{\"role\": \"system\", \"content\": system_message}] + history\n",
+        "    response = openai.chat.completions.create(model=MODEL, messages=messages, tools=tools)\n",
+        "    image = None\n",
+        "\n",
+        "    if response.choices[0].finish_reason==\"tool_calls\":\n",
+        "        message = response.choices[0].message\n",
+        "        response, city = handle_tool_call(message)\n",
+        "        messages.append(message)\n",
+        "        messages.append(response)\n",
+        "        image = artist(city)\n",
+        "        response = openai.chat.completions.create(model=MODEL, messages=messages)\n",
+        "\n",
+        "    reply = response.choices[0].message.content\n",
+        "    history += [{\"role\":\"assistant\", \"content\":reply}]\n",
+        "\n",
+        "    # Comment out or delete the next line if you'd rather skip Audio for now..\n",
+        "    talker(reply)\n",
+        "\n",
+        "    return history, image"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "iHiTefs7HiHt"
+      },
+      "outputs": [],
+      "source": [
+        "# More involved Gradio code as we're not using the preset Chat interface!\n",
+        "# Passing in inbrowser=True in the last line will cause a Gradio window to pop up immediately.\n",
+        "\n",
+        "with gr.Blocks() as ui:\n",
+        "    with gr.Row():\n",
+        "        chatbot = gr.Chatbot(height=500, type=\"messages\")\n",
+        "        image_output = gr.Image(height=500)\n",
+        "    with gr.Row():\n",
+        "        entry = gr.Textbox(label=\"Chat with our AI Assistant:\")\n",
+        "    with gr.Row():\n",
+        "        clear = gr.Button(\"Clear\")\n",
+        "\n",
+        "    def do_entry(message, history):\n",
+        "        history += [{\"role\":\"user\", \"content\":message}]\n",
+        "        return \"\", history\n",
+        "\n",
+        "    entry.submit(do_entry, inputs=[entry, chatbot], outputs=[entry, chatbot]).then(\n",
+        "        chat, inputs=chatbot, outputs=[chatbot, image_output]\n",
+        "    )\n",
+        "    clear.click(lambda: None, inputs=None, outputs=chatbot, queue=False)\n",
+        "\n",
+        "ui.launch(inbrowser=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "pJt5pYWgBRer",
+        "outputId": "3f73f18c-be7e-45c6-c839-290e79d58733"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Collecting gradio\n",
+            "  Downloading gradio-5.6.0-py3-none-any.whl.metadata (16 kB)\n",
+            "Collecting aiofiles<24.0,>=22.0 (from gradio)\n",
+            "  Downloading aiofiles-23.2.1-py3-none-any.whl.metadata (9.7 kB)\n",
+            "Requirement already satisfied: anyio<5.0,>=3.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.7.1)\n",
+            "Collecting fastapi<1.0,>=0.115.2 (from gradio)\n",
+            "  Downloading fastapi-0.115.5-py3-none-any.whl.metadata (27 kB)\n",
+            "Collecting ffmpy (from gradio)\n",
+            "  Downloading ffmpy-0.4.0-py3-none-any.whl.metadata (2.9 kB)\n",
+            "Collecting gradio-client==1.4.3 (from gradio)\n",
+            "  Downloading gradio_client-1.4.3-py3-none-any.whl.metadata (7.1 kB)\n",
+            "Requirement already satisfied: httpx>=0.24.1 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.27.2)\n",
+            "Requirement already satisfied: huggingface-hub>=0.25.1 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.26.2)\n",
+            "Requirement already satisfied: jinja2<4.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.1.4)\n",
+            "Collecting markupsafe~=2.0 (from gradio)\n",
+            "  Downloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.0 kB)\n",
+            "Requirement already satisfied: numpy<3.0,>=1.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (1.26.4)\n",
+            "Requirement already satisfied: orjson~=3.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (3.10.11)\n",
+            "Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from gradio) (24.2)\n",
+            "Requirement already satisfied: pandas<3.0,>=1.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (2.2.2)\n",
+            "Requirement already satisfied: pillow<12.0,>=8.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (11.0.0)\n",
+            "Requirement already satisfied: pydantic>=2.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (2.9.2)\n",
+            "Collecting pydub (from gradio)\n",
+            "  Downloading pydub-0.25.1-py2.py3-none-any.whl.metadata (1.4 kB)\n",
+            "Collecting python-multipart==0.0.12 (from gradio)\n",
+            "  Downloading python_multipart-0.0.12-py3-none-any.whl.metadata (1.9 kB)\n",
+            "Requirement already satisfied: pyyaml<7.0,>=5.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (6.0.2)\n",
+            "Collecting ruff>=0.2.2 (from gradio)\n",
+            "  Downloading ruff-0.7.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (25 kB)\n",
+            "Collecting safehttpx<1.0,>=0.1.1 (from gradio)\n",
+            "  Downloading safehttpx-0.1.1-py3-none-any.whl.metadata (4.1 kB)\n",
+            "Collecting semantic-version~=2.0 (from gradio)\n",
+            "  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)\n",
+            "Collecting starlette<1.0,>=0.40.0 (from gradio)\n",
+            "  Downloading starlette-0.41.3-py3-none-any.whl.metadata (6.0 kB)\n",
+            "Collecting tomlkit==0.12.0 (from gradio)\n",
+            "  Downloading tomlkit-0.12.0-py3-none-any.whl.metadata (2.7 kB)\n",
+            "Requirement already satisfied: typer<1.0,>=0.12 in /usr/local/lib/python3.10/dist-packages (from gradio) (0.13.0)\n",
+            "Requirement already satisfied: typing-extensions~=4.0 in /usr/local/lib/python3.10/dist-packages (from gradio) (4.12.2)\n",
+            "Collecting uvicorn>=0.14.0 (from gradio)\n",
+            "  Downloading uvicorn-0.32.0-py3-none-any.whl.metadata (6.6 kB)\n",
+            "Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from gradio-client==1.4.3->gradio) (2024.10.0)\n",
+            "Collecting websockets<13.0,>=10.0 (from gradio-client==1.4.3->gradio)\n",
+            "  Downloading websockets-12.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)\n",
+            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (3.10)\n",
+            "Requirement already satisfied: sniffio>=1.1 in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (1.3.1)\n",
+            "Requirement already satisfied: exceptiongroup in /usr/local/lib/python3.10/dist-packages (from anyio<5.0,>=3.0->gradio) (1.2.2)\n",
+            "Requirement already satisfied: certifi in /usr/local/lib/python3.10/dist-packages (from httpx>=0.24.1->gradio) (2024.8.30)\n",
+            "Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.10/dist-packages (from httpx>=0.24.1->gradio) (1.0.6)\n",
+            "Requirement already satisfied: h11<0.15,>=0.13 in /usr/local/lib/python3.10/dist-packages (from httpcore==1.*->httpx>=0.24.1->gradio) (0.14.0)\n",
+            "Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (3.16.1)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (2.32.3)\n",
+            "Requirement already satisfied: tqdm>=4.42.1 in /usr/local/lib/python3.10/dist-packages (from huggingface-hub>=0.25.1->gradio) (4.66.6)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2.8.2)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2024.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.10/dist-packages (from pandas<3.0,>=1.0->gradio) (2024.2)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/dist-packages (from pydantic>=2.0->gradio) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.23.4 in /usr/local/lib/python3.10/dist-packages (from pydantic>=2.0->gradio) (2.23.4)\n",
+            "Requirement already satisfied: click>=8.0.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (8.1.7)\n",
+            "Requirement already satisfied: shellingham>=1.3.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (1.5.4)\n",
+            "Requirement already satisfied: rich>=10.11.0 in /usr/local/lib/python3.10/dist-packages (from typer<1.0,>=0.12->gradio) (13.9.4)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.8.2->pandas<3.0,>=1.0->gradio) (1.16.0)\n",
+            "Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.10/dist-packages (from rich>=10.11.0->typer<1.0,>=0.12->gradio) (3.0.0)\n",
+            "Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich>=10.11.0->typer<1.0,>=0.12->gradio) (2.18.0)\n",
+            "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub>=0.25.1->gradio) (3.4.0)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub>=0.25.1->gradio) (2.2.3)\n",
+            "Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->typer<1.0,>=0.12->gradio) (0.1.2)\n",
+            "Downloading gradio-5.6.0-py3-none-any.whl (57.1 MB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m57.1/57.1 MB\u001b[0m \u001b[31m8.8 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading gradio_client-1.4.3-py3-none-any.whl (320 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m320.1/320.1 kB\u001b[0m \u001b[31m8.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading python_multipart-0.0.12-py3-none-any.whl (23 kB)\n",
+            "Downloading tomlkit-0.12.0-py3-none-any.whl (37 kB)\n",
+            "Downloading aiofiles-23.2.1-py3-none-any.whl (15 kB)\n",
+            "Downloading fastapi-0.115.5-py3-none-any.whl (94 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m94.9/94.9 kB\u001b[0m \u001b[31m4.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (25 kB)\n",
+            "Downloading ruff-0.7.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.1 MB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m11.1/11.1 MB\u001b[0m \u001b[31m27.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading safehttpx-0.1.1-py3-none-any.whl (8.4 kB)\n",
+            "Downloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)\n",
+            "Downloading starlette-0.41.3-py3-none-any.whl (73 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m73.2/73.2 kB\u001b[0m \u001b[31m4.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading uvicorn-0.32.0-py3-none-any.whl (63 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m63.7/63.7 kB\u001b[0m \u001b[31m3.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading ffmpy-0.4.0-py3-none-any.whl (5.8 kB)\n",
+            "Downloading pydub-0.25.1-py2.py3-none-any.whl (32 kB)\n",
+            "Downloading websockets-12.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (130 kB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m130.2/130.2 kB\u001b[0m \u001b[31m8.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hInstalling collected packages: pydub, websockets, uvicorn, tomlkit, semantic-version, ruff, python-multipart, markupsafe, ffmpy, aiofiles, starlette, safehttpx, gradio-client, fastapi, gradio\n",
+            "  Attempting uninstall: markupsafe\n",
+            "    Found existing installation: MarkupSafe 3.0.2\n",
+            "    Uninstalling MarkupSafe-3.0.2:\n",
+            "      Successfully uninstalled MarkupSafe-3.0.2\n",
+            "Successfully installed aiofiles-23.2.1 fastapi-0.115.5 ffmpy-0.4.0 gradio-5.6.0 gradio-client-1.4.3 markupsafe-2.1.5 pydub-0.25.1 python-multipart-0.0.12 ruff-0.7.4 safehttpx-0.1.1 semantic-version-2.10.0 starlette-0.41.3 tomlkit-0.12.0 uvicorn-0.32.0 websockets-12.0\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install gradio\n",
+        "import gradio as gr\n",
+        "\n",
+        "# More involved Gradio code as we're not using the preset Chat interface!\n",
+        "# Passing in inbrowser=True in the last line will cause a Gradio window to pop up immediately.\n",
+        "\n",
+        "with gr.Blocks() as ui:\n",
+        "    with gr.Row():\n",
+        "        chatbot = gr.Chatbot(height=500, type=\"messages\")\n",
+        "        image_output = gr.Image(height=500)\n",
+        "    with gr.Row():\n",
+        "        entry = gr.Textbox(label=\"Chat with our AI Assistant:\")\n",
+        "    with gr.Row():\n",
+        "        clear = gr.Button(\"Clear\")\n",
+        "\n",
+        "    def do_entry(message, history):\n",
+        "        history += [{\"role\":\"user\", \"content\":message}]\n",
+        "        return \"\", history\n",
+        "\n",
+        "    entry.submit(do_entry, inputs=[entry, chatbot], outputs=[entry, chatbot]).then(\n",
+        "        chat, inputs=chatbot, outputs=[chatbot, image_output]\n",
+        "    )\n",
+        "    clear.click(lambda: None, inputs=None, outputs=chatbot, queue=False)\n",
+        "\n",
+        "ui.launch(inbrowser=True)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "j2rvYyMhHnmy"
+      },
+      "source": [
+        "Exercises and Business Applications\n",
+        "Add in more tools - perhaps to simulate actually booking a flight. A student has done this and provided their example in the community contributions folder.\n",
+        "\n",
+        "Next: take this and apply it to your business. Make a multi-modal AI assistant with tools that could carry out an activity for your work. A customer support assistant? New employee onboarding assistant? So many possibilities! Also, see the week2 end of week Exercise in the separate Notebook."
+      ]
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyOmIEt1Lll7XhTYP3QD1Q48",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
